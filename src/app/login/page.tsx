@@ -2,12 +2,15 @@ import { login } from '@/app/auth/actions'
 
 export const dynamic = 'force-dynamic'
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; success?: string }>
-}) {
-  const params = await searchParams
+type PageProps = {
+  searchParams?: Promise<{
+    error?: string
+    success?: string
+  }>
+}
+
+export default async function LoginPage({ searchParams }: PageProps) {
+  const params = (await searchParams) ?? {}
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
@@ -35,11 +38,11 @@ export default async function LoginPage({
             />
           </div>
 
-          {params?.error && (
+          {params.error && (
             <p className="text-red-500 mb-4">{params.error}</p>
           )}
 
-          {params?.success && (
+          {params.success && (
             <p className="text-green-600 mb-4">{params.success}</p>
           )}
 
