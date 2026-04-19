@@ -10,7 +10,7 @@ export async function login(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const { error, data } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
@@ -19,19 +19,8 @@ export async function login(formData: FormData) {
     return redirect('/login?error=' + encodeURIComponent(error.message))
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', data.user.id)
-    .maybeSingle()
-
   revalidatePath('/', 'layout')
-
-  if (profile?.role === 'COACH') {
-    return redirect('/coach')
-  }
-
-  return redirect('/athlete')
+  return redirect('/')
 }
 
 export async function signup(formData: FormData) {
@@ -39,37 +28,18 @@ export async function signup(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
-  const role = formData.get('role') as string
-  const fullName = formData.get('fullName') as string
 
-  const { error, data } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      data: {
-        role,
-        full_name: fullName,
-      },
-    },
   })
 
   if (error) {
     return redirect('/signup?error=' + encodeURIComponent(error.message))
   }
 
-  if (data.user) {
-    await supabase.from('profiles').upsert({
-      id: data.user.id,
-      full_name: fullName,
-      role,
-    })
-  }
-
   revalidatePath('/', 'layout')
-  return redirect(
-    '/login?success=' +
-      encodeURIComponent('Account created. Please log in.')
-  )
+  return redirect('/login?success=' + encodeURIComponent('Account created. Please log in.'))
 }
 
 export async function logout() {
