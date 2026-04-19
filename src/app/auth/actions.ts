@@ -23,7 +23,7 @@ export async function login(formData: FormData) {
     .from('profiles')
     .select('role')
     .eq('id', data.user.id)
-    .single()
+    .maybeSingle()
 
   revalidatePath('/', 'layout')
 
@@ -42,7 +42,7 @@ export async function signup(formData: FormData) {
   const role = formData.get('role') as string
   const fullName = formData.get('fullName') as string
 
-  const { error } = await supabase.auth.signUp({
+  const { error, data } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -55,6 +55,14 @@ export async function signup(formData: FormData) {
 
   if (error) {
     return redirect('/signup?error=' + encodeURIComponent(error.message))
+  }
+
+  if (data.user) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      full_name: fullName,
+      role,
+    })
   }
 
   revalidatePath('/', 'layout')
