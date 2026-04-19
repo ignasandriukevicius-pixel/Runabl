@@ -45,25 +45,40 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Role based access control (basic)
+   // Role based access control
   if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
 
-    if (profile) {
-      if (profile.role === 'COACH' && request.nextUrl.pathname.startsWith('/athlete')) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/coach'
-        return NextResponse.redirect(url)
+      if (profile) {
+        // Redirect from /welcome based on role
+        if (request.nextUrl.pathname === '/welcome') {
+          const url = request.nextUrl.clone()
+          if (profile.role === 'COACH') {
+            url.pathname = '/coach'
+          } else if (profile.role === 'ATHLETE') {
+            url.pathname = '/athlete'
+          }
+          return NextResponse.redirect(url)
+        }
+
+        if (profile.role === 'COACH' && request.nextUrl.pathname.startsWith('/athlete')) {
+          const url = request.nextUrl.clone()
+          url.pathname = '/coach'
+          return NextResponse.redirect(url)
+        }
+        if (profile.role === 'ATHLETE' && request.nextUrl.pathname.startsWith('/coach')) {
+          const url = request.nextUrl.clone()
+          url.pathname = '/athlete'
+          return NextResponse.redirect(url)
+        }
       }
-      if (profile.role === 'ATHLETE' && request.nextUrl.pathname.startsWith('/coach')) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/athlete'
-        return NextResponse.redirect(url)
-      }
+    } catch (error) {
+      console.error('Error fetching profile:', error)
     }
   }
 
