@@ -10,7 +10,10 @@ export async function login(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const { error, data } = await supabase.auth.signInWithPassword({ email, password })
+  const { error, data } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
 
   if (error) {
     return redirect('/login?error=' + encodeURIComponent(error.message))
@@ -23,12 +26,12 @@ export async function login(formData: FormData) {
     .single()
 
   revalidatePath('/', 'layout')
-  
+
   if (profile?.role === 'COACH') {
     return redirect('/coach')
-  } else {
-    return redirect('/athlete')
   }
+
+  return redirect('/athlete')
 }
 
 export async function signup(formData: FormData) {
@@ -39,7 +42,7 @@ export async function signup(formData: FormData) {
   const role = formData.get('role') as string
   const fullName = formData.get('fullName') as string
 
-  const { error, data } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -55,12 +58,10 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  
-  if (role === 'COACH') {
-    return redirect('/coach')
-  } else {
-    return redirect('/athlete')
-  }
+  return redirect(
+    '/login?success=' +
+      encodeURIComponent('Account created. Please log in.')
+  )
 }
 
 export async function logout() {
